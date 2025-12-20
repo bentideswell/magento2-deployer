@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+CDIR=`dirname $(realpath "$0")`
+source "${CDIR}/src/bootstrap"
+
+[ -d "${PATH_RELEASES}" ] || mkdir "${PATH_RELEASES}"
+[ -d "${PATH_SHARED}" ]   || mkdir "${PATH_SHARED}"

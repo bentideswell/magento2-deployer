@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#
+# Options
+#
+# --delete
+# --list
+CDIR=`dirname $(realpath "$0")`
+source "${CDIR}/src/bootstrap"
+
+_do_title "Deleting Old Releases"
+
+if [ "${IS_DRY_RUN}" == "1" ]; then
+    echo ""
+    echo $(color_yellow "Dry run. Nothing will be deleted.")
+    echo ""
+fi
+
+ls -1 "$PATH_RELEASES" | grep -v "^${CURRENT_RELEASE}$" | while IFS= read -r RELEASE; do
+    if [ -z "$RELEASE" ]; then
+        color_red "Error. Release Empty. Abort"
+        exit 1
+    fi
+
+    echo "${RELEASE}"
+
+    if [ "${IS_DRY_RUN}" == "0" ]; then
+        rm -rf "${PATH_RELEASES}/${RELEASE}"
+    fi
+done

@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+#
+# Options
+#
+# --keep-git
+# --no-compile
+# --no-static
+# --no-db
+# --skip-mode
+
+CDIR=`dirname $(realpath "$0")`
+source "${CDIR}/src/bootstrap"
+
+_do_title "Creating release in ${TSTAMP}"
+
+[ -d "${PATH_RELEASE_NEW}" ] || mkdir "${PATH_RELEASE_NEW}"
+
+cd "${PATH_RELEASE_NEW}"
+
+# GIT
+_do_title "Cloning repo from URL ${REPO_URL}"
+
+git clone --depth=1 "${REPO_URL}" . || _do_error "GIT"
+
+if _flag_not_exists "--keep-git"; then
+    _do_title "Removing GIT from release"
+    rm -rf ./.git ./.gitignore
+fi
+
+# Shared Files
+_do_title "Shared Files"
+
+for SHARED_FILE in "${SHARED_FILES[@]}"; do
+    SHARED_SOURCE_FILE="${PATH_SHARED}/${SHARED_FILE}"
+
+    _do_point "${SHARED_SOURCE_FILE}"
+
+    if [[ -d "${SHARED_SOURCE_FILE}" ]]; then
+        SHARED_FILE_PARENT_DIR=`dirname "${SHARED_FILE}"`
+
+        [ -d "${SHARED_FILE_PARENT_DIR}" ] || mkdir "${SHARED_FILE_PARENT_DIR}"
+    fi
+
+    ln -s ${PATH_SHARED}/${SHARED_FILE} ${SHARED_FILE}
+done
+
+# Composer
+_do_title "Installing dependencies via Composer"
+
+composer install --no-dev || _do_error "Composer"
+
+# Mage Mode
+_do_title "Magento Mode"
+
+if _flag_exists "--no-mode"; then
+    _do_skip_flag
+else
+    _do_point "MAGE_MODE=${MAGE_MODE}"
+    bin/magento deploy:mode:set --skip-compilation "${MAGE_MODE}"
+fi
+
+# Compile
+_do_title "Compiling Magento"
+
+if _flag_exists "--no-compile"; then
+    _do_skip_flag
+else
+    bin/magento setup:di:compile || _do_error "Compile"
+fi
+
+# Static Assets
+_do_title "Compiling Static Assets"
+
+if _flag_exists "--no-static" || [ "${IS_DEV_MODE}" = 1 ]; then
+    _do_skip_flag
+else
+    bin/magento setup:static-content:deploy -f || _do_error "Static Content"
+
+    ls -al pub/static/frontend/Magento/luma/en_GB
+fi
+
+# Upgrade DB
+_do_title "Upgrading the Database"
+
+if _flag_exists "--no-db"; then
+    _do_skip_flag
+else
+    _do_point "First enabling maintenance mode on the live site"
+
+    (cd "${PATH_CURRENT}" && ls -al && bin/magento maintenance:enable && cd -) \
+        || _do_error "Maintenance on live"
+
+    _do_point "Now upgrading the database"
+
+    bin/magento setup:upgrade || _do_error "Upgrade DB. Live site may be down now due to maintenance mode."
+fi
+
+cd "${PATH_BASE}"
+
+# Symlink
+_do_title "Current Symlink"
+
+CURRENT_RESOLVED=$(readlink "${PATH_CURRENT}")
+
+_do_point "Current=${CURRENT_RESOLVED}"
+
+_do_point "New Current=releases/${TSTAMP}"
+
+rm current && ln -s "releases/${TSTAMP}" current
+
+_do_title "Verify"
+
+NEW_CURRENT_RESOLVED=$(readlink "${PATH_CURRENT}")
+
+_do_point "NewCurrentResolved=${NEW_CURRENT_RESOLVED}"
+

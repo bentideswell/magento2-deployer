@@ -1,0 +1,74 @@
+#!/usr/bin/env bash
+
+# Move into current DIR
+CDIR=`dirname $(realpath "$0")`
+cd "${CDIR}/src"
+
+# Include required files
+source "output"
+
+_do_title "Bootstrap" 
+
+TSTAMP=`date +%s`
+PATH_DEPLOYER=`dirname $(dirname $(pwd))`
+PATH_BASE=`dirname ${PATH_DEPLOYER}`
+PATH_CONFIG="${PATH_DEPLOYER}/config"
+PATH_SHARED="${PATH_BASE}/shared"
+PATH_CURRENT="${PATH_BASE}/current"
+PATH_RELEASES="${PATH_BASE}/releases"
+PATH_RELEASE_NEW="${PATH_RELEASES}/${TSTAMP}"
+
+CURRENT_RELEASE="$(basename "$(readlink ${PATH_CURRENT})")"
+
+# Repo URL
+REPO_URL_FILE="${PATH_CONFIG}/repo.url"
+
+[ ! -f "${REPO_URL_FILE}" ] && _do_error "Repo file does not exist: ${REPO_URL_FILE}"
+
+REPO_URL=$(cat "${PATH_CONFIG}/repo.url")
+
+[ -z "${REPO_URL}" ] && _do_error "Repo file is empty"
+
+_do_titled_point "Repository:" "${REPO_URL}"
+
+
+# Setup flags
+FLAGS=()
+for i in "$@" ; do
+    FLAGS+=("${i}")
+done
+
+function _flag_exists {
+    local FLAG="${1}"
+    for arg in "${FLAGS[@]}"; do
+        [[ "$arg" == "$FLAG" ]] && return 0
+    done
+    return 1
+}
+
+function _flag_not_exists {
+    _flag_exists "${1}" && return 1;
+    return 0;
+}
+
+if _flag_exists "--dry-run"; then
+    IS_DRY_RUN=1
+else
+    IS_DRY_RUN=0
+fi
+
+# Handle Shared
+SHARED_FILES=()
+while IFS= read -r line; do
+    SHARED_FILES+=("$line")
+done < "${PATH_CONFIG}/shared"
+
+# Mage Mode
+MAGE_MODE="production"
+[ -f "${PATH_CONFIG}/mage-mode" ] && MAGE_MODE=$(cat "${PATH_CONFIG}/mage-mode")
+_flag_exists "--dev" && MAGE_MODE="developer"
+[ "${MAGE_MODE}" == "developer" ] && IS_DEV_MODE=1 || IS_DEV_MODE=0
+
+
+
+cd "${PATH_BASE}"
