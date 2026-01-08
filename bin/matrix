@@ -7,9 +7,6 @@ _do_title "Loading Environment"
 
 # PHP Version
 _assert_config "${PHP_VERSION}" "PHP_VERSION"
-_assert_config "${GIT_TOKEN}" "GIT_TOKEN"
-_assert_config "${GIT_USERNAME}" "GIT_USERNAME"
-_assert_config "${GIT_HOST}" "GIT_HOST"
 
 _do_titled_point "PHP Version:" "${PHP_VERSION}"
 _do_line_break
@@ -62,7 +59,7 @@ docker run --rm -it \
     && mv composer.phar /usr/local/bin/composer \
     && rm -f composer-setup.php \
     && composer config --global github-oauth.github.com ${GIT_TOKEN} \
-    && echo \"${REPO_URL_WITH_AUTH}\" > ~/.git-credentials \
+    && echo \"${REPO_URL}\" > ~/.git-credentials \
     && git config --global credential.helper store \
     && bash"
 
