@@ -4,33 +4,62 @@
 CDIR=`dirname $(realpath "$0")`
 cd "${CDIR}/src"
 
-# Include required files
-source "output"
+function _source_file {
+    if [ -f "${1}" ]; then
+        source "${1}"
+        return 1;
+    fi
+
+    _do_error "File does not exist: ${1}"
+    exit 1
+}
+
+function _assert_config {
+    if [ -z "${1}" ]; then
+        _do_error "${2} is not set or is empty in the config"
+        exit 1
+    fi
+}
+
+_source_file "output"
 
 _do_title "Bootstrap" 
 
-TSTAMP=`date +%s`
+if [ -z "${TSTAMP_DEBUG}" ]; then
+    TSTAMP=`date +%s`
+else
+    TSTAMP="${TSTAMP_DEBUG}"
+fi
+
+
 PATH_DEPLOYER=`dirname $(dirname $(pwd))`
 PATH_BASE=`dirname ${PATH_DEPLOYER}`
 PATH_CONFIG="${PATH_DEPLOYER}/config"
 PATH_SHARED="${PATH_BASE}/shared"
+PATH_CACHE="${PATH_BASE}/.cache"
 PATH_CURRENT="${PATH_BASE}/current"
 PATH_RELEASES="${PATH_BASE}/releases"
 PATH_RELEASE_NEW="${PATH_RELEASES}/${TSTAMP}"
 
 CURRENT_RELEASE="$(basename "$(readlink ${PATH_CURRENT})")"
 
-# Repo URL
-REPO_URL_FILE="${PATH_CONFIG}/repo.url"
+_source_file "../../config/default"
+_source_file "${PATH_BASE}/.deployer-config"
 
-[ ! -f "${REPO_URL_FILE}" ] && _do_error "Repo file does not exist: ${REPO_URL_FILE}"
+_assert_config "${PROJECT_ID}" "PROJECT_ID"
+_assert_config "${REPO_URL}" "REPO_URL"
+_assert_config "${SHARED_FILES_LIST}" "SHARED_FILES_LIST"
+_assert_config "${MAGE_MODE}" "MAGE_MODE"
 
-REPO_URL=$(cat "${PATH_CONFIG}/repo.url")
+REPO_URL_WITH_AUTH="https://${GIT_USERNAME}:${GIT_TOKEN}@$(echo "$REPO_URL" | sed 's|^https://||')"
 
-[ -z "${REPO_URL}" ] && _do_error "Repo file is empty"
 
-_do_titled_point "Repository:" "${REPO_URL}"
 
+function bin_magento {
+    php -dmemory_limit="${PHP_MEMORY_LIMIT}" bin/magento "$@"
+}
+
+_do_titled_point " Repository:" "${REPO_URL}"
 
 # Setup flags
 FLAGS=()
@@ -57,18 +86,43 @@ else
     IS_DRY_RUN=0
 fi
 
-# Handle Shared
+# Load shared files into array
 SHARED_FILES=()
 while IFS= read -r line; do
     SHARED_FILES+=("$line")
-done < "${PATH_CONFIG}/shared"
+done <<< "$SHARED_FILES_LIST"
 
 # Mage Mode
-MAGE_MODE="production"
-[ -f "${PATH_CONFIG}/mage-mode" ] && MAGE_MODE=$(cat "${PATH_CONFIG}/mage-mode")
 _flag_exists "--dev" && MAGE_MODE="developer"
 [ "${MAGE_MODE}" == "developer" ] && IS_DEV_MODE=1 || IS_DEV_MODE=0
 
-
-
 cd "${PATH_BASE}"
+
+# Create base dirs
+[ -d "${PATH_RELEASES}" ] || mkdir "${PATH_RELEASES}"
+[ -d "${PATH_SHARED}" ]   || mkdir "${PATH_SHARED}"
+[ -d "${PATH_CACHE}" ]    || mkdir "${PATH_CACHE}"
+
+if [ ! -z "${MAGE_DEPLOY_THEME_LIST}" ]; then
+    DEPLOYED_THEMES=()
+    while IFS= read -r theme; do
+        DEPLOYED_THEMES+=("$theme")
+    done <<< "$MAGE_DEPLOY_THEME_LIST"
+fi
+
+function _deploy_static_assets {
+    if [ ! -z "${DEPLOYED_THEMES}" ]; then
+        for THEME in "${DEPLOYED_THEMES[@]}"; do
+            _do_line_break
+            bin_magento setup:static-content:deploy -f "${MAGE_DEPLOY_STATIC_ASSETS_LOCALE}" --theme "${THEME}" --no-parent || return 1
+        done
+    else
+        _do_point "No themes specified so deploying all themes"
+        _do_line_break
+        bin_magento setup:static-content:deploy -f "${MAGE_DEPLOY_STATIC_ASSETS_LOCALE}" || return 1
+    fi
+
+    _do_line_break
+
+    return 0
+}

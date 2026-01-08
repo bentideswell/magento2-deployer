@@ -3,10 +3,10 @@
 # Options
 #
 # --keep-git
+# --no-mode
 # --no-compile
 # --no-static
 # --no-db
-# --skip-mode
 
 CDIR=`dirname $(realpath "$0")`
 source "${CDIR}/src/bootstrap"
@@ -20,7 +20,11 @@ cd "${PATH_RELEASE_NEW}"
 # GIT
 _do_title "Cloning repo from URL ${REPO_URL}"
 
-git clone --depth=1 "${REPO_URL}" . || _do_error "GIT"
+if [ -z "${TSTAMP_DEBUG}" ]; then
+    git clone --depth=1 "${REPO_URL}" . || _do_error "GIT"
+else
+    _do_point "Skipping as TSTAMP_DEBUG is set"
+fi
 
 if _flag_not_exists "--keep-git"; then
     _do_title "Removing GIT from release"
@@ -47,7 +51,18 @@ done
 # Composer
 _do_title "Installing dependencies via Composer"
 
-composer install --no-dev || _do_error "Composer"
+if [ -z "${TSTAMP_DEBUG}" ]; then
+    composer install --no-dev || _do_error "Composer"
+else
+    _do_point "Skipping as TSTAMP_DEBUG is set"
+fi
+
+# Magento Version Check
+_do_title "Magento Version"
+bin_magento "" || _do_error "Bin/Magento"
+_do_line_break
+bin_magento --version || _do_error "Version"
+_do_line_break
 
 # Mage Mode
 _do_title "Magento Mode"
@@ -56,7 +71,8 @@ if _flag_exists "--no-mode"; then
     _do_skip_flag
 else
     _do_point "MAGE_MODE=${MAGE_MODE}"
-    bin/magento deploy:mode:set --skip-compilation "${MAGE_MODE}"
+    _do_line_break
+    bin_magento deploy:mode:set --skip-compilation "${MAGE_MODE}" || _do_error "MAGE_MODE"
 fi
 
 # Compile
@@ -65,7 +81,8 @@ _do_title "Compiling Magento"
 if _flag_exists "--no-compile"; then
     _do_skip_flag
 else
-    bin/magento setup:di:compile || _do_error "Compile"
+    _do_line_break
+    bin_magento setup:di:compile || _do_error "Compile"
 fi
 
 # Static Assets
@@ -74,9 +91,7 @@ _do_title "Compiling Static Assets"
 if _flag_exists "--no-static" || [ "${IS_DEV_MODE}" = 1 ]; then
     _do_skip_flag
 else
-    bin/magento setup:static-content:deploy -f || _do_error "Static Content"
-
-    ls -al pub/static/frontend/Magento/luma/en_GB
+    _deploy_static_assets || _do_error "Static Content"
 fi
 
 # Upgrade DB
@@ -87,12 +102,17 @@ if _flag_exists "--no-db"; then
 else
     _do_point "First enabling maintenance mode on the live site"
 
-    (cd "${PATH_CURRENT}" && ls -al && bin/magento maintenance:enable && cd -) \
-        || _do_error "Maintenance on live"
+    if [ ! -d "${PATH_RELEASE_NEW}" ]; then
+        (cd "${PATH_CURRENT}" && ls -al && (bin_magento maintenance:enable) && cd -) \
+            || _do_error "Maintenance on live"
+    else
+        _do_point "Skipping as live site does not exist"
+    fi
 
     _do_point "Now upgrading the database"
+    _do_line_break
 
-    bin/magento setup:upgrade || _do_error "Upgrade DB. Live site may be down now due to maintenance mode."
+    bin_magento setup:upgrade || _do_error "Upgrade DB. Live site may be down now due to maintenance mode."
 fi
 
 cd "${PATH_BASE}"
@@ -106,7 +126,9 @@ _do_point "Current=${CURRENT_RESOLVED}"
 
 _do_point "New Current=releases/${TSTAMP}"
 
-rm current && ln -s "releases/${TSTAMP}" current
+[ -L "${CURRENT_RESOLVED}" ] && rm current
+
+ln -s "releases/${TSTAMP}" current
 
 _do_title "Verify"
 

@@ -28,6 +28,8 @@ function _do_error {
     echo ""
     echo "   ${1}"
     echo ""
+    pwd
+    echo ""
     exit 1
 }
 
@@ -41,4 +43,8 @@ function _do_titled_point {
 
 function _do_skip_flag {
     color_yellow "Skipping"
+}
+
+function _do_line_break {
+    echo ""
 }

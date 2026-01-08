@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+#
+CDIR=`dirname $(realpath "$0")`
+source "${CDIR}/src/bootstrap"
+
+_do_title "Loading Environment"
+
+# PHP Version
+_assert_config "${PHP_VERSION}" "PHP_VERSION"
+_assert_config "${GIT_TOKEN}" "GIT_TOKEN"
+_assert_config "${GIT_USERNAME}" "GIT_USERNAME"
+_assert_config "${GIT_HOST}" "GIT_HOST"
+
+_do_titled_point "PHP Version:" "${PHP_VERSION}"
+_do_line_break
+
+# Setup composer home directory local to base directory
+PATH_COMPOSER_HOME="${PATH_CACHE}/composer"
+[ -d "${PATH_COMPOSER_HOME}" ] || mkdir "${PATH_COMPOSER_HOME}"
+
+docker run --rm -it \
+  -v "$PWD":/work -w /work \
+  -v "${PATH_COMPOSER_HOME}":/root/.composer \
+  php:8.1-cli \
+  bash -lc "apt-get update \
+    && apt-get install -y \
+        zip \
+        unzip \
+        git \
+        curl \
+        libcurl4-openssl-dev \
+        libzip-dev \
+        libpng-dev \
+        libjpeg-dev \
+        libwebp-dev \
+        libfreetype6-dev \
+        libonig-dev \
+        libxml2-dev \
+        libicu-dev \
+        libssl-dev \
+        libsocket++-dev \
+        libsoap-lite-perl \
+        libxslt-dev \
+        gettext \
+    && docker-php-ext-configure gd --with-jpeg --with-webp --with-freetype \
+    && docker-php-ext-install \
+        curl \
+        gd \
+        mbstring \
+        mysqli \
+        pdo \
+        pdo_mysql \
+        xml \
+        zip \
+        intl \
+        soap \
+        bcmath \
+        sockets \
+        xsl \
+    && php -r \"copy('https://getcomposer.org/installer', 'composer-setup.php');\" \
+    && php composer-setup.php \
+    && mv composer.phar /usr/local/bin/composer \
+    && rm -f composer-setup.php \
+    && composer config --global github-oauth.github.com ${GIT_TOKEN} \
+    && echo \"${REPO_URL_WITH_AUTH}\" > ~/.git-credentials \
+    && git config --global credential.helper store \
+    && bash"
+
