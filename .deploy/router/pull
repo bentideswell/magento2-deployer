@@ -148,3 +148,4 @@ NEW_CURRENT_RESOLVED=$(readlink "${PATH_CURRENT}")
 
 _do_point "NewCurrentResolved=${NEW_CURRENT_RESOLVED}"
 
+source "${PATH_DEPLOY}/router/reload"

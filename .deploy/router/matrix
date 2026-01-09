@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 #
-CDIR=`dirname $(realpath "$0")`
-source "${CDIR}/src/bootstrap"
 
 _do_title "Loading Environment"
 
