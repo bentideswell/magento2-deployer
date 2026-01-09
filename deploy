@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+# Normalise the cdir
+PATH_BASE=`dirname $(realpath "$0")`
+cd "${PATH_BASE}"
+
+PATH_DEPLOY="${PATH_BASE}/.deploy"
+
+# Load bootstrap
+BOOTSTRAP_FILE="${PATH_DEPLOY}/inc/bootstrap"
+
+if [ ! -e "${BOOTSTRAP_FILE}" ]; then
+    echo "File does not exist: ${BOOTSTRAP_FILE}"
+    exit 1
+fi
+
+source "${BOOTSTRAP_FILE}"
+
+ACTION_MATCHED=0
+
+for i in "$@" ; do
+    if [ "${i}" == "--deploy" ] || [ "${i}" == "--pull" ]; then
+        source "${PATH_DEPLOY}/router/pull"
+        ACTION_MATCHED=1
+        break
+    elif [ "${i}" == "--clean" ]; then
+        source "${PATH_DEPLOY}/router/clean"
+        ACTION_MATCHED=1
+        break
+    elif [ "${i}" == "--verify-shared" ]; then
+        source "${PATH_DEPLOY}/router/verify-shared"
+        ACTION_MATCHED=1
+        break
+    fi
+done
+
+if [ "${ACTION_MATCHED}" -eq 0 ]; then
+    echo "No action matched. Exiting."
+    exit 1
+fi

@@ -42,7 +42,8 @@ function _do_titled_point {
 }
 
 function _do_skip_flag {
-    color_yellow "Skipping"
+    echo -n "   "
+    color_yellow "Skipping this step as user requested to do so via flag"
 }
 
 function _do_line_break {

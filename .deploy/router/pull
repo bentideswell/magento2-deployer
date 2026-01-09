@@ -7,9 +7,10 @@
 # --no-compile
 # --no-static
 # --no-db
+# --no-composer
+# --no-version-check
 
-CDIR=`dirname $(realpath "$0")`
-source "${CDIR}/src/bootstrap"
+source "${PATH_DEPLOY}/router/verify-shared"
 
 _do_title "Creating release in ${TSTAMP}"
 
@@ -52,17 +53,26 @@ done
 _do_title "Installing dependencies via Composer"
 
 if [ -z "${TSTAMP_DEBUG}" ]; then
-    composer install --no-dev || _do_error "Composer"
+    if _flag_exists "--no-composer"; then
+        _do_skip_flag
+    else
+        composer install --no-dev || _do_error "Composer"
+    fi
 else
     _do_point "Skipping as TSTAMP_DEBUG is set"
 fi
 
 # Magento Version Check
 _do_title "Magento Version"
-bin_magento "" || _do_error "Bin/Magento"
-_do_line_break
-bin_magento --version || _do_error "Version"
-_do_line_break
+
+if _flag_exists "--no-version-check"; then
+    _do_skip_flag
+else
+    bin_magento "" || _do_error "Bin/Magento"
+    _do_line_break
+    bin_magento --version || _do_error "Version"
+    _do_line_break
+fi
 
 # Mage Mode
 _do_title "Magento Mode"
@@ -122,11 +132,11 @@ _do_title "Current Symlink"
 
 CURRENT_RESOLVED=$(readlink "${PATH_CURRENT}")
 
+_do_point "PATH_CURRENT=${PATH_CURRENT}"
 _do_point "Current=${CURRENT_RESOLVED}"
-
 _do_point "New Current=releases/${TSTAMP}"
 
-[ -L "${CURRENT_RESOLVED}" ] && rm current
+[ -L "${PATH_CURRENT}" ] && rm "${PATH_CURRENT}"
 
 ln -s "releases/${TSTAMP}" current
 

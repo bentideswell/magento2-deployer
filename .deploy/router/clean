@@ -2,10 +2,7 @@
 #
 # Options
 #
-# --delete
-# --list
-CDIR=`dirname $(realpath "$0")`
-source "${CDIR}/src/bootstrap"
+# --dry-run
 
 _do_title "Deleting Old Releases"
 

@@ -11,6 +11,10 @@ _assert_config "${PHP_VERSION}" "PHP_VERSION"
 _do_titled_point "PHP Version:" "${PHP_VERSION}"
 _do_line_break
 
+# Setup cache directory
+PATH_CACHE="${PATH_BASE}/.cache"
+[ -d "${PATH_CACHE}" ]    || mkdir "${PATH_CACHE}"
+
 # Setup composer home directory local to base directory
 PATH_COMPOSER_HOME="${PATH_CACHE}/composer"
 [ -d "${PATH_COMPOSER_HOME}" ] || mkdir "${PATH_COMPOSER_HOME}"

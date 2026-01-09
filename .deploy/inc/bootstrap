@@ -1,9 +1,5 @@
 #!/usr/bin/env bash
 
-# Move into current DIR
-CDIR=`dirname $(realpath "$0")`
-cd "${CDIR}/src"
-
 function _source_file {
     if [ -f "${1}" ]; then
         source "${1}"
@@ -21,7 +17,7 @@ function _assert_config {
     fi
 }
 
-_source_file "output"
+_source_file "${PATH_DEPLOY}/inc/output"
 
 _do_title "Bootstrap" 
 
@@ -31,19 +27,14 @@ else
     TSTAMP="${TSTAMP_DEBUG}"
 fi
 
-
-PATH_DEPLOYER=`dirname $(dirname $(pwd))`
-PATH_BASE=`dirname ${PATH_DEPLOYER}`
-PATH_CONFIG="${PATH_DEPLOYER}/config"
 PATH_SHARED="${PATH_BASE}/shared"
-PATH_CACHE="${PATH_BASE}/.cache"
 PATH_CURRENT="${PATH_BASE}/current"
 PATH_RELEASES="${PATH_BASE}/releases"
 PATH_RELEASE_NEW="${PATH_RELEASES}/${TSTAMP}"
 
 CURRENT_RELEASE="$(basename "$(readlink ${PATH_CURRENT})")"
 
-_source_file "../../config/default"
+_source_file "${PATH_DEPLOY}/inc/default-config"
 _source_file "${PATH_BASE}/.deployer-config"
 
 _assert_config "${PROJECT_ID}" "PROJECT_ID"
@@ -84,8 +75,8 @@ fi
 
 # Load shared files into array
 SHARED_FILES=()
-while IFS= read -r line; do
-    SHARED_FILES+=("$line")
+while IFS= read -r SHARED_FILE; do
+    SHARED_FILES+=("${SHARED_FILE}")
 done <<< "$SHARED_FILES_LIST"
 
 # Mage Mode
@@ -97,7 +88,6 @@ cd "${PATH_BASE}"
 # Create base dirs
 [ -d "${PATH_RELEASES}" ] || mkdir "${PATH_RELEASES}"
 [ -d "${PATH_SHARED}" ]   || mkdir "${PATH_SHARED}"
-[ -d "${PATH_CACHE}" ]    || mkdir "${PATH_CACHE}"
 
 if [ ! -z "${MAGE_DEPLOY_THEME_LIST}" ]; then
     DEPLOYED_THEMES=()

@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#
+
+_do_title "Verifying Shared Files"
+
+
+for SHARED_FILE in "${SHARED_FILES[@]}"; do
+    SHARED_SOURCE_FILE="${PATH_SHARED}/${SHARED_FILE}"
+
+    if [[ ! -e "${SHARED_SOURCE_FILE}" ]]; then
+        _do_error "Shared file does not exist: ${SHARED_SOURCE_FILE}"
+    fi
+done
+
+    
+_do_point "All shared files are present"
