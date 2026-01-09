@@ -115,7 +115,7 @@ else
     _do_point "First enabling maintenance mode on the live site"
 
     if [ -d "${PATH_RELEASE_NEW}" ]; then
-        (cd "${PATH_CURRENT}" && ls -al && (bin_magento maintenance:enable) && cd -) \
+        (cd "${PATH_CURRENT}" && (bin_magento maintenance:enable) && cd -) \
             || _do_error "Maintenance on live"
     else
         _do_point "Skipping as live site does not exist"

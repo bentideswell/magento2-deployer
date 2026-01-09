@@ -100,7 +100,6 @@ fi
 function _deploy_static_assets {
     if [ ! -z "${DEPLOYED_THEMES}" ]; then
         for THEME in "${DEPLOYED_THEMES[@]}"; do
-            _do_line_break
             bin_magento setup:static-content:deploy -f "${MAGE_DEPLOY_STATIC_ASSETS_LOCALE}" --theme "${THEME}" --no-parent || return 1
         done
     else
