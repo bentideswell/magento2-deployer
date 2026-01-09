@@ -19,8 +19,6 @@ function _assert_config {
 
 _source_file "${PATH_DEPLOY}/inc/output"
 
-_do_title "Bootstrap" 
-
 if [ -z "${TSTAMP_DEBUG}" ]; then
     TSTAMP=`date +%s`
 else
@@ -41,12 +39,11 @@ _assert_config "${PROJECT_ID}" "PROJECT_ID"
 _assert_config "${REPO_URL}" "REPO_URL"
 _assert_config "${SHARED_FILES_LIST}" "SHARED_FILES_LIST"
 _assert_config "${MAGE_MODE}" "MAGE_MODE"
+#_assert_config "${PHP_FPM_RELOAD_CMD}" "PHP_FPM_RELOAD_CMD"
 
 function bin_magento {
     php -dmemory_limit="${PHP_MEMORY_LIMIT}" bin/magento "$@"
 }
-
-_do_titled_point " Repository:" "${REPO_URL}"
 
 # Setup flags
 FLAGS=()

@@ -35,6 +35,6 @@ for i in "$@" ; do
 done
 
 if [ "${ACTION_MATCHED}" -eq 0 ]; then
-    echo "No action matched. Exiting."
+    echo "Error! No action requested."
     exit 1
 fi

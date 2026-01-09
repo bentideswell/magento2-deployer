@@ -19,7 +19,9 @@ _do_title "Creating release in ${TSTAMP}"
 cd "${PATH_RELEASE_NEW}"
 
 # GIT
-_do_title "Cloning repo from URL ${REPO_URL}"
+_do_title "Cloning Repository"
+_do_titled_point " Repository:" "${REPO_URL}"
+_do_line_break
 
 if [ -z "${TSTAMP_DEBUG}" ]; then
     git clone --depth=1 "${REPO_URL}" . || _do_error "GIT"
@@ -112,7 +114,7 @@ if _flag_exists "--no-db"; then
 else
     _do_point "First enabling maintenance mode on the live site"
 
-    if [ ! -d "${PATH_RELEASE_NEW}" ]; then
+    if [ -d "${PATH_RELEASE_NEW}" ]; then
         (cd "${PATH_CURRENT}" && ls -al && (bin_magento maintenance:enable) && cd -) \
             || _do_error "Maintenance on live"
     else
@@ -122,7 +124,7 @@ else
     _do_point "Now upgrading the database"
     _do_line_break
 
-    bin_magento setup:upgrade || _do_error "Upgrade DB. Live site may be down now due to maintenance mode."
+    bin_magento setup:upgrade --keep-generated || _do_error "Upgrade DB. Live site may be down now due to maintenance mode."
 fi
 
 cd "${PATH_BASE}"
