@@ -33,12 +33,17 @@ PATH_RELEASE_NEW="${PATH_RELEASES}/${TSTAMP}"
 CURRENT_RELEASE="$(basename "$(readlink ${PATH_CURRENT})")"
 
 _source_file "${PATH_DEPLOY}/inc/default-config"
-_source_file "${PATH_BASE}/.deployer-config"
+_source_file "${PATH_BASE}/.deploy-config"
 
 _assert_config "${PROJECT_ID}" "PROJECT_ID"
 _assert_config "${REPO_URL}" "REPO_URL"
 _assert_config "${SHARED_FILES_LIST}" "SHARED_FILES_LIST"
 _assert_config "${MAGE_MODE}" "MAGE_MODE"
+
+if ! declare -F _do_php_reload >/dev/null; then
+    _do_error "_do_php_reload function is not defined in .deploy-config"
+    exit 1
+fi
 
 function bin_magento {
     php -dmemory_limit="${PHP_MEMORY_LIMIT}" bin/magento "$@"
