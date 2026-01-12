@@ -3,13 +3,26 @@
 # Options
 #
 # --keep-git
+# --no-composer
+# --no-version-check
 # --no-mode
 # --no-compile
 # --no-static
 # --no-db
-# --no-composer
-# --no-version-check
 # --no-launch
+# --develop
+
+if _flag_exists "--develop"; then
+    MAGE_MODE="developer"
+    IS_DEV_MODE=1
+
+    FLAGS+=('--keep-git')
+    FLAGS+=('--no-version-check')
+    FLAGS+=('--no-mode')
+    FLAGS+=('--no-compile')
+    FLAGS+=('--no-static')
+    FLAGS+=('--no-db')
+fi
 
 source "${PATH_DEPLOY}/router/verify-shared"
 
