@@ -20,7 +20,7 @@ function _assert_config {
 _source_file "${PATH_DEPLOY}/inc/output"
 
 if [ -z "${TSTAMP_DEBUG}" ]; then
-    TSTAMP=`date +%s`
+    TSTAMP=`date +%Y%m%d%H%M%S`
 else
     TSTAMP="${TSTAMP_DEBUG}"
 fi

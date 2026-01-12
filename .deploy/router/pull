@@ -39,17 +39,33 @@ fi
 _do_title "Shared Files"
 
 for SHARED_FILE in "${SHARED_FILES[@]}"; do
-    SHARED_SOURCE_FILE="${PATH_SHARED}/${SHARED_FILE}"
+    SHARED_SOURCE_FILE_PREFIX="../../"
+    SHARED_SOURCE_FILE="${SHARED_SOURCE_FILE_PREFIX}shared/${SHARED_FILE}"
+    SHARED_TARGET_FILE="${PATH_RELEASE_NEW}/${SHARED_FILE}"
+    SHARED_TARGET_FILE_PARENT_DIR=`dirname "${SHARED_TARGET_FILE}"`
+    SHARED_FILE_SLASH_COUNT=$(printf '%s' "$SHARED_FILE" | tr -cd '/' | wc -c | tr -d ' ')
+    
+    if [ ! -d "${SHARED_TARGET_FILE_PARENT_DIR}" ]; then
+        mkdir -p "${SHARED_TARGET_FILE_PARENT_DIR}"
 
-    _do_point "${SHARED_SOURCE_FILE}"
-
-    if [[ -d "${SHARED_SOURCE_FILE}" ]]; then
-        SHARED_FILE_PARENT_DIR=`dirname "${SHARED_FILE}"`
-
-        [ -d "${SHARED_FILE_PARENT_DIR}" ] || mkdir "${SHARED_FILE_PARENT_DIR}"
+        if [ ! -d "${SHARED_TARGET_FILE_PARENT_DIR}" ]; then
+            _do_error "Could not create shared file parent directory at ${SHARED_TARGET_FILE_PARENT_DIR}"
+        fi
     fi
 
-    ln -s ${PATH_SHARED}/${SHARED_FILE} ${SHARED_FILE}
+    i=0
+    while [ "$i" -lt "$SHARED_FILE_SLASH_COUNT" ]; do
+        SHARED_SOURCE_FILE_PREFIX="${SHARED_SOURCE_FILE_PREFIX}../"
+        i=$((i + 1))
+    done
+    
+    SHARED_SOURCE_FILE_RELATIVE="${SHARED_SOURCE_FILE_PREFIX}shared/${SHARED_FILE}"
+
+    _do_titled_point "Source:" "$(realpath ${SHARED_SOURCE_FILE})"
+    _do_titled_point "Target:" "${PATH_RELEASE_NEW}/${SHARED_SOURCE_FILE_RELATIVE}"
+    _do_line_break
+    
+    ln -s "${SHARED_SOURCE_FILE_RELATIVE}" "${SHARED_FILE}"
 done
 
 # Composer
@@ -134,9 +150,9 @@ cd "${PATH_BASE}"
 _do_title "Launch Site (Change Symlink)"
 
 CURRENT_RESOLVED=$(readlink "${PATH_CURRENT}")
-
+CURRENT_TARGET="./releases/${TSTAMP}"
 _do_titled_point " Pre-Deploy:" "${CURRENT_RESOLVED}"
-_do_titled_point "Post-Deploy:" "releases/${TSTAMP}"
+_do_titled_point "Post-Deploy:" "${CURRENT_TARGET}"
 
 if _flag_exists "--no-launch"; then
     _do_line_break
@@ -145,7 +161,7 @@ if _flag_exists "--no-launch"; then
 else
     [ -L "${PATH_CURRENT}" ] && rm "${PATH_CURRENT}"
 
-    ln -s "releases/${TSTAMP}" current
+    ln -s "${CURRENT_TARGET}" current
 
     source "${PATH_DEPLOY}/router/reload"
 fi
