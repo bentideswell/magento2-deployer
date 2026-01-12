@@ -9,6 +9,7 @@
 # --no-db
 # --no-composer
 # --no-version-check
+# --no-launch
 
 source "${PATH_DEPLOY}/router/verify-shared"
 
@@ -31,7 +32,7 @@ fi
 
 if _flag_not_exists "--keep-git"; then
     _do_title "Removing GIT from release"
-    rm -rf ./.git ./.gitignore
+    rm -rf ./.git
 fi
 
 # Shared Files
@@ -130,22 +131,25 @@ fi
 cd "${PATH_BASE}"
 
 # Symlink
-_do_title "Current Symlink"
+_do_title "Launch Site (Change Symlink)"
 
 CURRENT_RESOLVED=$(readlink "${PATH_CURRENT}")
 
-_do_point "PATH_CURRENT=${PATH_CURRENT}"
-_do_point "Current=${CURRENT_RESOLVED}"
-_do_point "New Current=releases/${TSTAMP}"
+_do_titled_point " Pre-Deploy:" "${CURRENT_RESOLVED}"
+_do_titled_point "Post-Deploy:" "releases/${TSTAMP}"
 
-[ -L "${PATH_CURRENT}" ] && rm "${PATH_CURRENT}"
+if _flag_exists "--no-launch"; then
+    _do_line_break
+    _do_skip_flag
+    _do_line_break
+else
+    [ -L "${PATH_CURRENT}" ] && rm "${PATH_CURRENT}"
 
-ln -s "releases/${TSTAMP}" current
+    ln -s "releases/${TSTAMP}" current
 
-_do_title "Verify"
+    source "${PATH_DEPLOY}/router/reload"
+fi
 
 NEW_CURRENT_RESOLVED=$(readlink "${PATH_CURRENT}")
-
-_do_point "NewCurrentResolved=${NEW_CURRENT_RESOLVED}"
-
-source "${PATH_DEPLOY}/router/reload"
+_do_titled_point "     Actual:" "${NEW_CURRENT_RESOLVED}"
+_do_line_break

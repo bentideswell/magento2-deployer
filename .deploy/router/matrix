@@ -5,7 +5,6 @@ _do_title "Loading Environment"
 
 # PHP Version
 _assert_config "${PHP_VERSION}" "PHP_VERSION"
-
 _do_titled_point "PHP Version:" "${PHP_VERSION}"
 _do_line_break
 
@@ -20,7 +19,7 @@ PATH_COMPOSER_HOME="${PATH_CACHE}/composer"
 docker run --rm -it \
   -v "$PWD":/work -w /work \
   -v "${PATH_COMPOSER_HOME}":/root/.composer \
-  php:8.1-cli \
+  php:${PHP_VERSION}-cli \
   bash -lc "apt-get update \
     && apt-get install -y \
         zip \

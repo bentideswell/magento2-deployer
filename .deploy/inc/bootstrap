@@ -35,7 +35,6 @@ CURRENT_RELEASE="$(basename "$(readlink ${PATH_CURRENT})")"
 _source_file "${PATH_DEPLOY}/inc/default-config"
 _source_file "${PATH_BASE}/.deploy-config"
 
-_assert_config "${PROJECT_ID}" "PROJECT_ID"
 _assert_config "${REPO_URL}" "REPO_URL"
 _assert_config "${SHARED_FILES_LIST}" "SHARED_FILES_LIST"
 _assert_config "${MAGE_MODE}" "MAGE_MODE"
