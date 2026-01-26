@@ -22,6 +22,12 @@ if _flag_exists "--develop"; then
     FLAGS+=('--no-compile')
     FLAGS+=('--no-static')
     FLAGS+=('--no-db')
+    FLAGS+=('--no-launch')
+fi
+
+if _flag_exists "--dry-run"; then
+    FLAGS+=('--no-db')
+    FLAGS+=('--no-launch')
 fi
 
 source "${PATH_DEPLOY}/router/verify-shared"

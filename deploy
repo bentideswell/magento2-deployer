@@ -23,8 +23,8 @@ for i in "$@" ; do
         source "${PATH_DEPLOY}/router/pull"
         ACTION_MATCHED=1
         break
-    elif [ "${i}" == "--clean" ]; then
-        source "${PATH_DEPLOY}/router/clean"
+    elif [ "${i}" == "--prune" ]; then
+        source "${PATH_DEPLOY}/router/prune"
         ACTION_MATCHED=1
         break
     elif [ "${i}" == "--verify-shared" ]; then
