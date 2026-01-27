@@ -51,6 +51,9 @@ fi
 
 if _flag_not_exists "--keep-git"; then
     _do_title "Removing GIT from release"
+    _do_point "Saving latest commit to .git.state"
+    git log --oneline -1 > .git.state
+
     rm -rf ./.git
 fi
 
