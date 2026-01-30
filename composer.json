@@ -1,6 +1,5 @@
 {
     "name": "fishpig/magento2-deployer",
     "description": "Zero down time deployment system for Magento 2",
-    "version": "1.0.0",
     "license": "proprietary"
 }
