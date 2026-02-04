@@ -2,7 +2,6 @@
 #
 # Options
 #
-# --keep-git
 # --no-composer
 # --no-version-check
 # --no-mode
@@ -11,19 +10,6 @@
 # --no-db
 # --no-launch
 # --develop
-
-if _flag_exists "--develop"; then
-    MAGE_MODE="developer"
-    IS_DEV_MODE=1
-
-    FLAGS+=('--keep-git')
-    FLAGS+=('--no-version-check')
-    FLAGS+=('--no-mode')
-    FLAGS+=('--no-compile')
-    FLAGS+=('--no-static')
-    FLAGS+=('--no-db')
-    FLAGS+=('--no-launch')
-fi
 
 if _flag_exists "--dry-run"; then
     FLAGS+=('--no-db')
@@ -47,14 +33,6 @@ if [ -z "${TSTAMP_DEBUG}" ]; then
     git clone --depth=1 "${REPO_URL}" . || _do_error "GIT"
 else
     _do_point "Skipping as TSTAMP_DEBUG is set"
-fi
-
-if _flag_not_exists "--keep-git"; then
-    _do_title "Removing GIT from release"
-    _do_point "Saving latest commit to .git.state"
-    git log --oneline -1 > .git.state
-
-    rm -rf ./.git
 fi
 
 # Shared Files
