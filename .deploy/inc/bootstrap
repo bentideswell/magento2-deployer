@@ -38,6 +38,7 @@ _source_file "${PATH_BASE}/.deploy-config"
 _assert_config "${REPO_URL}" "REPO_URL"
 _assert_config "${SHARED_FILES_LIST}" "SHARED_FILES_LIST"
 _assert_config "${MAGE_MODE}" "MAGE_MODE"
+_assert_config "${MAGE_BASE_URL}" "MAGE_BASE_URL"
 
 if ! declare -F _do_php_reload >/dev/null; then
     _do_error "_do_php_reload function is not defined in .deploy-config"

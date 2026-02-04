@@ -1,6 +1,14 @@
 #!/usr/bin/env bash
 
+
+
+ORIG_PATH=$(pwd)
+
+cd "${PATH_CURRENT}"
+
 _do_title "Reload PHP-FPM"
 _do_line_break
 _do_php_reload
 _do_line_break
+
+cd "${ORIG_PATH}"

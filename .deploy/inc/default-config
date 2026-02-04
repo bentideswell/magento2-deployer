@@ -8,3 +8,27 @@ PHP_VERSION=8.2
 
 # Deploy
 SHARED_FILES_LIST=""
+
+# Reload PHP
+function _do_php_reload {
+    _do_php_reload_before
+    if [ -f "bin/sweep-floor" ]; then
+        bin/sweep-floor
+    fi
+    _do_php_reload_opcache
+    _do_php_reload_after
+}
+
+function _do_php_reload_before {
+    :
+}
+function _do_php_reload_opcache {
+    echo "<?php header('Content-Type: text/plain;charset=utf-8');echo opcache_reset() ? \"OPCache Reset\":\"Opcache not reset\";" > pub/opcache-reset.php
+    echo ""
+    curl -sS "${MAGE_BASE_URL}/opcache-reset.php"
+    echo ""
+    rm -rf pub/opcache-reset.php
+}
+function _do_php_reload_after {
+    :
+}
