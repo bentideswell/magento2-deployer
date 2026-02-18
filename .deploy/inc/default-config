@@ -25,26 +25,11 @@ function _do_php_reload_before {
 
 function _do_php_reload_opcache {
 
+    AUTH_KEY=$(date +'%-d * %u' | bc)
     _do_title "Reset OPCache"
-
-    CURRENT_RESOLVED=$(readlink "${PATH_CURRENT}")
-
-    _do_titled_point "Target" "${CURRENT_RESOLVED}"
-
-    if [ ! -z "${CURRENT_RESOLVED}" ]; then
-        OPCACHE_RESET_CONTENT="<?php header('Content-Type: text/plain;charset=utf-8');echo opcache_reset() ? \"OPCache Reset\":\"Opcache not reset\";"
-        OPCACHE_RESET_FILENAME="opcache-reset.php"
-        OPCACHE_RESET_FILE="${PATH_BASE}/${CURRENT_RESOLVED}/pub/${OPCACHE_RESET_FILENAME}"
-
-        _do_titled_point "OPCache Reset" "${OPCACHE_RESET_FILE}"
-        echo "${OPCACHE_RESET_CONTENT}" > "${OPCACHE_RESET_FILE}"
-        _do_line_break
-        curl -sSk "${MAGE_BASE_URL}/${OPCACHE_RESET_FILENAME}"
-        _do_line_break
-        rm "${OPCACHE_RESET_FILE}"
-    else 
-        _do_point "Current symlink empty so skipping"
-    fi
+    _do_line_break
+    curl -sSk -XPOST "${MAGE_BASE_URL}/fishpig-opcache/reset" -H "X-Auth-Key: ${AUTH_KEY}"
+    _do_line_break
 }
 
 function _do_php_reload_after {
